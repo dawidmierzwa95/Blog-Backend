@@ -1,0 +1,47 @@
+version: "3.1"
+services:
+    backend:
+        image: webdevops/php-nginx:7.2
+        container_name: ${CONTAINER_PREFIX}_backend
+        ports:
+            - "${HTTP_PORT}:80"
+            - "${HTTPS_PORT}:443"
+        volumes:
+            - ./laravel/blog:/var/www/html
+        environment:
+            - WEB_DOCUMENT_ROOT=/var/www/html${DOCUMENT_ROOT_DIRECTORY}
+        working_dir: /var/www/html
+    postgres:
+        image: sameersbn/postgresql:10
+        container_name: ${CONTAINER_PREFIX}_postgres
+        environment:
+            - PG_PASSWORD=${POSTGRES_ROOT_PASSWORD}
+            - DB_USER=${POSTGRES_USER}
+            - DB_PASS=${POSTGRES_PASSWORD}
+            - DB_NAME=${POSTGRES_DATABASES}
+        ports:
+            - "${PG_PORT}:5432"
+        volumes:
+            - ./persistence/postgres:/var/lib/postgresql/data
+            # For external volume:
+            #- postgres_persistence:/var/lib/postgresql/data
+    pga:
+        image: dpage/pgadmin4
+        container_name: ${CONTAINER_PREFIX}_pga
+        environment:
+            - PGADMIN_DEFAULT_EMAIL=${PGA_EMAIL}
+            - PGADMIN_DEFAULT_PASSWORD=${PGA_PASSWORD}
+            - PGADMIN_ENABLE_TLS=
+        ports:
+            - "${PGA_PORT}:80"
+        volumes:
+            - ./persistence/pgadmin/:/var/lib/pgadmin
+    node: 
+        image: node
+        container_name: ${CONTAINER_PREFIX}_node
+        user: node
+        working_dir: /home/node/app
+        environment:
+            - NODE_ENV=production
+        volumes:
+            - ./laravel/blog:/home/node/app
