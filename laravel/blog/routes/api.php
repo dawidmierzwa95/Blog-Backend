@@ -13,15 +13,35 @@ use Illuminate\Http\Request;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
-});
+Route::get('/tags/all', 'TagController@index')
+    ->name('api_getAllTags');
 
-Route::get('/tags/all', 'TagController@index')->name('api_getAllTags');
+Route::get('/articles/all/{tag?}', 'ArticleController@index')
+    ->name('api_getAllArticles');
 
-Route::get('/articles/all/{tag?}', 'ArticleController@index')->name('api_getAllArticles');
-Route::get('/articles/{slug}', 'ArticleController@show')->name('api_getArticle');
+Route::get('/articles/{slug}', 'ArticleController@show')
+    ->name('api_getArticle');
 
-Route::get('/comments/{articleId}', 'CommentController@index')->name('api_getCommentsForArticle');
+Route::get('/comments/{articleId}', 'CommentController@index')
+    ->name('api_getCommentsForArticle');
 
-Route::post('/user/login', 'Auth\LoginController@login')->name('api_logIn');
+Route::post('/comments/{articleId}', 'CommentController@store')
+    ->middleware('token.authorization')
+    ->name('api_storeComment');
+
+Route::put('/comments', 'CommentController@update')
+    ->middleware('token.authorization')
+    ->name('api_updateComment');
+
+Route::post('/comments/status/{id}', 'CommentController@setStatus')
+    ->middleware('token.authorization')
+    ->name('api_setCommentStatus');
+
+Route::post('/user/login', 'Auth\LoginController@login')
+    ->name('api_logIn');
+
+Route::post('/user/register', 'Auth\RegisterController@register')
+    ->name('api_register');
+
+Route::post('/user/logout', 'Auth\LoginController@logout')
+    ->name('api_logOut');

@@ -19,7 +19,7 @@ class ArticleController extends Controller
 
     }
 
-    public function update(Request $request, $slug) {
+    public function update(Request $request, string $slug) {
 
     }
 

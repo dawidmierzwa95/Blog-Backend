@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Foundation\Auth\RegistersUsers;
+use Illuminate\Http\Request;
 
 class RegisterController extends Controller
 {
@@ -49,9 +50,10 @@ class RegisterController extends Controller
     protected function validator(array $data)
     {
         return Validator::make($data, [
-            'name' => ['required', 'string', 'max:255'],
+            'full_name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255', 'unique:users'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'string', 'min:8'],
         ]);
     }
 
@@ -63,10 +65,31 @@ class RegisterController extends Controller
      */
     protected function create(array $data)
     {
-        return User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-        ]);
+        $new = new User();
+
+        $new->name = $data['name'];
+        $new->full_name = $data['full_name'];
+        $new->email = $data['email'];
+        $new->password = bcrypt($data['password']);
+        $new->permissions = ['USER'];
+
+        $new->save();
+
+        return $new;
+    }
+
+    public function register(Request $request)
+    {
+        $validator = $this->validator($request->all());
+
+        if($validator->fails())
+        {
+            return ["errors" => $validator->errors()];
+        }else{
+            $user = $this->create($request->all());
+            $user->createApiToken();
+
+            return ["user" => $user->makeVisible(['email', 'api_token'])];
+        }
     }
 }

@@ -39,7 +39,8 @@ class LoginController extends Controller
         $this->middleware('guest')->except('logout');
     }
 
-    public function login(Request $request) {
+    public function login(Request $request)
+    {
         $request->validate([
                             'email' => 'required|string|email',
                             'password' => 'required|string',
@@ -47,11 +48,12 @@ class LoginController extends Controller
 
         $credentials = request(['email', 'password']);
 
-        if (Auth::attempt($credentials)) {
+        if (Auth::attempt($credentials))
+        {
             $user = $request->user();
             $user->createApiToken();
 
-            return ['user' => $user];
+            return ['user' => $user->makeVisible(['email', 'api_token'])];
         }
 
         return [];

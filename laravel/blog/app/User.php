@@ -26,7 +26,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $hidden = [
-        'password', 'remember_token',
+        'password', 'remember_token', 'api_token', 'email'
     ];
 
     /**
@@ -45,5 +45,9 @@ class User extends Authenticatable
         $this->save();
 
         return $this->api_token;
+    }
+
+    public function hasPermission(string $permission) {
+        return in_array($permission, $this->permissions);
     }
 }

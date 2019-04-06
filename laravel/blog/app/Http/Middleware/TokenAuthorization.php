@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\User;
 use Closure;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -16,10 +17,15 @@ class TokenAuthorization
      */
     public function handle($request, Closure $next)
     {
-        if(!$request->header('Authorization')) {
-            return Response::HTTP_UNAUTHORIZED;
+        $token = $request->header('Authorization');
+
+        if($token && $user = User::where('api_token', $token)->first())
+        {
+            $request->attributes->add(['user' => $user]);
+
+            return $next($request);
         }
 
-        return $next($request);
+        return Response::HTTP_UNAUTHORIZED;
     }
 }
