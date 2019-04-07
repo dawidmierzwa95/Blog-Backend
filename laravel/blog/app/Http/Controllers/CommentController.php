@@ -5,24 +5,19 @@ namespace App\Http\Controllers;
 use App\Article;
 use App\Comment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CommentController extends Controller
 {
-    protected $user;
-
-    function __construct(Request $request)
-    {
-        $this->user = $request->get('user');
-    }
-
     public function index(int $articleId)
     {
+        $user = Auth::user();
         $comments = Comment::where('article_id', $articleId);
-/*
-        if(!$this->user->hasPermissions('ADMIN'))
+
+        if(!$user || !$user->hasPermission('ADMIN'))
         {
             $comments->where('status', Comment::STATUS_ALIVE);
-        }*/
+        }
 
         return $comments->orderBy('created_at', 'asc')->get();
     }
@@ -31,7 +26,7 @@ class CommentController extends Controller
 
     public function store(Request $request, int $articleId)
     {
-        $user = $request->get('user');
+        $user = Auth::user();
         $article = Article::find($articleId);
 
         if($article)
@@ -54,10 +49,9 @@ class CommentController extends Controller
 
     public function update(Request $request)
     {
-        $user = $request->get('user');
         $comment = Comment::find($request->get('id'));
 
-        if($comment && $user->id === $comment->creator_id)
+        if($comment && Auth::user()->id === $comment->creator_id)
         {
             $comment->content = $request->get('content');
             $comment->save();
@@ -70,8 +64,8 @@ class CommentController extends Controller
 
     public function setStatus(Request $request, int $id)
     {
+        $user = Auth::user();
         $newStatus = $request->get('status');
-        $user = $request->get('user');
         $comment = Comment::find($id);
         $passed = false;
 

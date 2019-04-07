@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\User;
 use Closure;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class TokenAuthorization
@@ -13,19 +14,26 @@ class TokenAuthorization
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure  $next
+     * @param  $guest
      * @return mixed
      */
-    public function handle($request, Closure $next)
+    public function handle($request, Closure $next, $guest = false)
     {
         $token = $request->header('Authorization');
+        $passed = false;
 
         if($token && $user = User::where('api_token', $token)->first())
         {
-            $request->attributes->add(['user' => $user]);
+            Auth::setUser($user);
 
+            $passed = true;
+        }
+
+        if($passed || $guest)
+        {
             return $next($request);
         }
 
-        return Response::HTTP_UNAUTHORIZED;
+        return response()->json(['Access denied'], 403);
     }
 }

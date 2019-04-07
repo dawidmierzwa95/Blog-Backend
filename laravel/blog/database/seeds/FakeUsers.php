@@ -15,9 +15,25 @@ class FakeUsers extends Seeder
         DB::table('users')->insert([
             'name' => "admin",
             'full_name' => "Admin Adminowski",
-            'email' => "admin@admin.com",
+            'email' => "dawidmierzwa95@gmail.com",
             'password' => bcrypt('admin'),
             'permissions' => json_encode(['ADMIN', 'COPYWRITER', 'USER'])
+        ]);
+
+        DB::table('users')->insert([
+            'name' => "copywriter",
+            'full_name' => "Copywriter Adminowski",
+            'email' => "copy@copy.com",
+            'password' => bcrypt('copy'),
+            'permissions' => json_encode(['COPYWRITER', 'USER'])
+        ]);
+
+        DB::table('users')->insert([
+            'name' => "user",
+            'full_name' => "User Adminowski",
+            'email' => "user@user.com",
+            'password' => bcrypt('user'),
+            'permissions' => json_encode(['USER'])
         ]);
     }
 }

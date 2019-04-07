@@ -22,7 +22,24 @@ Route::get('/articles/all/{tag?}', 'ArticleController@index')
 Route::get('/articles/{slug}', 'ArticleController@show')
     ->name('api_getArticle');
 
+Route::post('/articles', 'ArticleController@store')
+    ->middleware('token.authorization')
+    ->name('api_storeArticle');
+
+Route::post('/articles/image/{articleId?}', 'ArticleController@setImage')
+    ->middleware('token.authorization')
+    ->name('api_setArticleImage');
+
+Route::put('/articles', 'ArticleController@update')
+    ->middleware('token.authorization')
+    ->name('api_updateArticle');
+
+Route::delete('/articles/{slug}', 'ArticleController@delete')
+    ->middleware('token.authorization')
+    ->name('api_deleteArticle');
+
 Route::get('/comments/{articleId}', 'CommentController@index')
+    ->middleware('token.authorization:true')
     ->name('api_getCommentsForArticle');
 
 Route::post('/comments/{articleId}', 'CommentController@store')
@@ -43,5 +60,5 @@ Route::post('/user/login', 'Auth\LoginController@login')
 Route::post('/user/register', 'Auth\RegisterController@register')
     ->name('api_register');
 
-Route::post('/user/logout', 'Auth\LoginController@logout')
-    ->name('api_logOut');
+Route::post('/user/reset', 'Auth\ResetPasswordController@resetPasswordAction')
+    ->name('api_resetPassword');

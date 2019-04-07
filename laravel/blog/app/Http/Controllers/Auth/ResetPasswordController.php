@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Notifications\ResetPassword;
+use App\User;
 use Illuminate\Foundation\Auth\ResetsPasswords;
+use Symfony\Component\HttpFoundation\Request;
 
 class ResetPasswordController extends Controller
 {
@@ -35,5 +38,17 @@ class ResetPasswordController extends Controller
     public function __construct()
     {
         $this->middleware('guest');
+    }
+
+    public function resetPasswordAction(Request $request) {
+
+        if($user = User::where('email', $request->get('email'))->first())
+        {
+            $user->notify(new ResetPassword($user->createNewPassword()));
+
+            return ["status" => true];
+        }
+
+        return ["status" => false];
     }
 }

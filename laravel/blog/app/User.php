@@ -47,7 +47,17 @@ class User extends Authenticatable
         return $this->api_token;
     }
 
+    public function createNewPassword()
+    {
+        $pass = Str::random(40);
+
+        $this->password = bcrypt($pass);
+        $this->save();
+
+        return $pass;
+    }
+
     public function hasPermission(string $permission) {
-        return in_array($permission, $this->permissions);
+        return (count(array_intersect($this->permissions, explode("|", $permission))));
     }
 }
