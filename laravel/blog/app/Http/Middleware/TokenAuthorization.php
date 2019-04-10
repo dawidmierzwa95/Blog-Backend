@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\User;
+use App\Model\User;
 use Closure;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
@@ -11,6 +11,7 @@ class TokenAuthorization
 {
     /**
      * Handle an incoming request.
+     * Check user status (guest or not) with API token
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure  $next

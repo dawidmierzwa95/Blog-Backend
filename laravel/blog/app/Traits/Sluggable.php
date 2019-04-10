@@ -16,6 +16,12 @@ trait Sluggable
         });
     }
 
+    /**
+     * Set model and create new slug
+     *
+     * @param  Model $model
+     * @return mixed
+     */
     public function generateSlugFromModel(Model $model)
     {
         $config = $model->sluggable();
@@ -43,5 +49,10 @@ trait Sluggable
         return $slug.$suffix;
     }
 
+    /**
+     * Init function for Model
+     *
+     * @return array
+     */
     abstract public function sluggable(): array;
 }

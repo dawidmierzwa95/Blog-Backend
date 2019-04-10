@@ -34,6 +34,7 @@ class ResetPassword extends Notification
 
     /**
      * Get the mail representation of the notification.
+     * Send e-mail with new password
      *
      * @param  mixed  $notifiable
      * @return \Illuminate\Notifications\Messages\MailMessage

@@ -2,79 +2,152 @@
 
 namespace App\Http\Controllers;
 
-use App\Tag;
+use App\Repositories\ArticleRepository;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
-use App\Article;
+use App\Model\Article;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Contracts\Auth\Guard;
-use Illuminate\Auth\AuthManager;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+use App\Transformers\ArticleTransformer;
 
 class ArticleController extends Controller
 {
+    /**
+     * @var ArticleRepository $repository
+     */
+    private $repository;
+
+    /**
+     * @param ArticleRepository $repository
+     */
+    public function __construct(ArticleRepository $repository)
+    {
+        $this->repository = $repository;
+    }
+
+    /**
+     * Article structure validator
+     *
+     * @param  array $data
+     * @return \Illuminate\Contracts\Validation\Validator
+     */
+    protected function validator(array $data)
+    {
+        return Validator::make($data, [
+            'content' => ['required', 'string'],
+            'title' => ['required', 'string', 'max:256'],
+            'creator_id' => ['int'],
+        ]);
+    }
+
+    /**
+     * Get all articles
+     *
+     * @param  string $tag
+     * @return Collection
+     */
     public function index(string $tag = "")
     {
-        if($tag)
-        {
-            return Tag::where('name', $tag)->first();
-        }
-
-        return Article::all();
+        return (new ArticleTransformer())->transformCollection($this->repository->all());
     }
 
+    /**
+     * Show specific Article
+     *
+     * @param  string $slug
+     * @return array
+     */
     public function show(string $slug)
     {
-        return Article::where('slug', $slug)->first();
+        return (new ArticleTransformer())->transform($this->repository->show($slug));
     }
 
+    /**
+     * Create new instance of Article
+     *
+     * @param  Request $request
+     * @return mixed
+     */
     public function store(Request $request)
     {
         $user = Auth::user();
 
         if($user->hasPermission('ADMIN|COPYWRITER'))
         {
-            $article = new Article();
+            $data = [
+                'content' => $request->get('content'),
+                'title' => $request->get('title'),
+                'creator_id' => $user->id
+            ];
 
-            $article->content = $request->get('content');
-            $article->title = $request->get('title');
-            $article->creator_id = $user->id;
-            $article->save();
+            $validator = $this->validator($data);
+
+            if($validator->fails())
+            {
+                return ['errors' => $validator->errors()];
+            }
+
+            $article = $this->repository->create($data);
 
             $article->author = $user;
 
-            return $article;
+            return (new ArticleTransformer())->transform($article);
         }
 
         return [];
     }
 
+    /**
+     * Update specific Article
+     *
+     * @param  Request $request
+     * @return mixed
+     */
     public function update(Request $request)
     {
-        if(Auth::user()->hasPermission('ADMIN|COPYWRITER') && $article = Article::find($request->get('id')))
+        if(Auth::user()->hasPermission('ADMIN|COPYWRITER') && $article = $this->repository->show($request->get('id')))
         {
-            $article->content = $request->get('content');
-            $article->title = $request->get('title');
-            $article->save();
+            $data = [
+                'content' => $request->get('content'),
+                'title' => $request->get('title')
+            ];
 
-            return $article;
+            $validator = $this->validator($data);
+
+            if($validator->fails())
+            {
+                return ['errors' => $validator->errors()];
+            }
+
+            return ["status" => $this->repository->update($data, $article->slug)];
         }
 
         return [];
     }
 
+    /**
+     * Delete specific Article
+     * @param  string $slug
+     * @return array
+     */
     public function delete(string $slug)
     {
-        if(Auth::user()->hasPermission('ADMIN') && $article = Article::where('slug', $slug))
+        if(Auth::user()->hasPermission('ADMIN'))
         {
-            return ["status" => $article->delete()];
+            return ["status" => $this->repository->delete($slug)];
         }
 
         return [];
     }
 
-    public function setImage(Request $request, int $articleId = 0)
+    /**
+     * Set article's image or upload image without owner
+     * @param  Request $request
+     * @param  string $slug
+     * @return array
+     */
+    public function setImage(Request $request, string $slug = "")
     {
         $file = $request->file('file');
 
@@ -86,12 +159,11 @@ class ArticleController extends Controller
         $path = Storage::disk('public')->put('photos', $file);
         $path = 'http://localhost:8081'.Storage::url($path);
 
-        if($articleId && $article = Article::find($articleId))
+        if($slug && $article = $this->repository->show($slug))
         {
-            $article->image = $path;
-            $article->save();
+            $this->repository->update(["image" => $path], $article->slug);
 
-            return ["url" => $article->image];
+            return ["url" => $path];
         }
 
         return ["default" => $path];

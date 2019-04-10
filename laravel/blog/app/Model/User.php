@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\Model;
 
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -39,6 +39,11 @@ class User extends Authenticatable
         'permissions' => 'array'
     ];
 
+    /**
+     * Create new api token for user
+     *
+     * @return string
+     */
     public function createApiToken()
     {
         $this->api_token = Str::random(40);
@@ -47,6 +52,11 @@ class User extends Authenticatable
         return $this->api_token;
     }
 
+    /**
+     * Create new password for user
+     *
+     * @return string
+     */
     public function createNewPassword()
     {
         $pass = Str::random(40);
@@ -57,6 +67,13 @@ class User extends Authenticatable
         return $pass;
     }
 
+    /**
+     * Check if user has specific permissions
+     * e.g. "ADMIN" or "ADMIN|COPYWRITER" as multiple
+     *
+     * @param string $permission
+     * @return string
+     */
     public function hasPermission(string $permission) {
         return (count(array_intersect($this->permissions, explode("|", $permission))));
     }
